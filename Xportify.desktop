@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Xportify
+GenericName=Music Downloader
+Comment=Descarga tus playlists de Spotify, YouTube Music y más en MP3
+Exec=/home/cristian/Projects/xportify/xportify-launcher.sh
+Icon=/home/cristian/Projects/xportify/assets/xportify.png
+Terminal=false
+Categories=AudioVideo;Audio;Utility;
+StartupNotify=true
+StartupWMClass=Xportify
+MimeType=audio/mpeg;

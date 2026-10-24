@@ -2,17 +2,17 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtGui import QIcon, QPixmap, QPainter, QColor, QLinearGradient, QBrush
-from PySide6.QtCore import Qt, QRectF
-
+from PySide6.QtGui import QIcon
 
 def icono_app() -> QIcon:
-    ruta = Path(__file__).resolve().parents[3] / "assets" / "icon.svg"
-    if ruta.exists():
-        icono = QIcon(str(ruta))
-        if not icono.isNull():
-            return icono
-    return _icono_generado()
+    base = Path(__file__).resolve().parents[3] / "assets"
+    for nombre in ["xportify.png", "xportify-icon-1024.png", "icon.svg"]:
+        ruta = base / nombre
+        if ruta.exists():
+            icono = QIcon(str(ruta))
+            if not icono.isNull():
+                return icono
+    return QIcon()
 
 
 def _icono_generado() -> QIcon:
