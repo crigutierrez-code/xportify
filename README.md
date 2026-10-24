@@ -147,3 +147,15 @@ Xportify no aloja, distribuye ni provee contenido musical. Descarga únicamente 
 ## Licencia
 
 [MIT](LICENSE) © 2026 Cristian
+
+## Releases automáticos
+
+Cada vez que se crea un tag `v*` se generan automáticamente:
+
+| Plataforma | Formato | Notas |
+|---|---|---|
+| **Linux** | `.tar.gz` | Binario `onedir` listo para ejecutar |
+| **Windows** | `.zip` | Contiene `Xportify/` con `.exe`. Extrae y abre `Xportify.exe` |
+| **macOS** | `.zip` | Contiene `Xportify.app`. Puede requerir permitir desde Ajustes > Privacidad si aparece bloqueo |
+
+Los hashes `SHA256` se publican junto a cada release.
