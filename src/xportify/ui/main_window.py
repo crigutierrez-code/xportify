@@ -492,8 +492,14 @@ class MainWindow(QMainWindow):
         ruta = self.carpeta_edit.text().strip()
         if not ruta:
             return
-        Path(ruta).mkdir(parents=True, exist_ok=True)
-        QDesktopServices.openUrl(f"file://{Path(ruta).resolve()}")
+        p = Path(ruta)
+        p.mkdir(parents=True, exist_ok=True)
+        try:
+            from PySide6.QtCore import QUrl
+
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(p.resolve())))
+        except Exception:
+            QDesktopServices.openUrl(f"file://{p.resolve()}")
 
     def cargar_desde_archivo(self):
         ruta = self.archivo_edit.text().strip()
@@ -620,29 +626,34 @@ class MainWindow(QMainWindow):
             self.lbl_prog.setText(f"Progreso: {actual}/{total}")
 
     def _on_estado(self, idx, estado, etiqueta):
-        if idx < 0 or idx >= self.tabla.rowCount():
-            return
-        col = 4
-        if estado == "buscando":
-            item = QTableWidgetItem("Buscando")
-            item.setForeground(Qt.yellow)
-            self.tabla.setItem(idx, col, item)
-        elif estado == "descargando":
-            item = QTableWidgetItem("Descargando")
-            item.setForeground(Qt.cyan)
-            self.tabla.setItem(idx, col, item)
-        elif estado == "listo":
-            item = QTableWidgetItem("Listo")
-            item.setForeground(Qt.green)
-            self.tabla.setItem(idx, col, item)
-        elif estado == "omitida":
-            item = QTableWidgetItem("Omitida")
-            item.setForeground(Qt.gray)
-            self.tabla.setItem(idx, col, item)
-        elif estado == "error":
-            item = QTableWidgetItem("Error")
-            item.setForeground(Qt.red)
-            self.tabla.setItem(idx, col, item)
+        try:
+            if not hasattr(self, "tabla") or self.tabla is None:
+                return
+            if idx < 0 or idx >= self.tabla.rowCount():
+                return
+            col = 4
+            if estado == "buscando":
+                item = QTableWidgetItem("Buscando")
+                item.setForeground(Qt.yellow)
+                self.tabla.setItem(idx, col, item)
+            elif estado == "descargando":
+                item = QTableWidgetItem("Descargando")
+                item.setForeground(Qt.cyan)
+                self.tabla.setItem(idx, col, item)
+            elif estado == "listo":
+                item = QTableWidgetItem("Listo")
+                item.setForeground(Qt.green)
+                self.tabla.setItem(idx, col, item)
+            elif estado == "omitida":
+                item = QTableWidgetItem("Omitida")
+                item.setForeground(Qt.gray)
+                self.tabla.setItem(idx, col, item)
+            elif estado == "error":
+                item = QTableWidgetItem("Error")
+                item.setForeground(Qt.red)
+                self.tabla.setItem(idx, col, item)
+        except Exception:
+            pass
 
     def _on_terminado(self, fallidas):
         self.bdescargar.setEnabled(True)
