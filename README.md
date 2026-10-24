@@ -2,8 +2,12 @@
 
 De tu lista a MP3. Una app de escritorio que convierte playlists de **Spotify, YouTube Music, SoundCloud y Bandcamp** —o un simple CSV/Excel— en archivos MP3 con metadatos.
 
-![Pestaña Archivo](docs/archivo.png)
-![Pestaña URL](docs/url.png)
+![Archivo / Texto](docs/archivo_v2.png)
+![URL](docs/url_v2.png)
+
+| Lista | Descarga |
+|---|---|
+| ![Lista](docs/lista_v2.png) | ![Descarga](docs/descarga_v2.png) |
 
 ## Por qué existe
 
@@ -24,9 +28,7 @@ SpotDL, Zotify y Spotube piden iniciar sesión con Spotify para casi todo. Xport
 - **Registro de fallidas** en `fallidas.txt`.
 - **CLI incluida** para quien prefiera la terminal.
 
-| Lista | Descarga |
-|---|---|
-| ![Lista](docs/lista.png) | ![Descarga](docs/descarga.png) |
+
 
 ## Requisitos
 

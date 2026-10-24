@@ -12,25 +12,37 @@ class Descargador:
     def __init__(self, carpeta_salida: str | Path, calidad: int = 192, preferir: str = "auto"):
         self.carpeta = Path(carpeta_salida).expanduser()
         self.carpeta.mkdir(parents=True, exist_ok=True)
-        self.calidad = calidad
-        self.preferir = preferir
+        self.calidad = int(calidad)
+        if self.calidad not in (128, 192, 256, 320):
+            self.calidad = 192
+        self.preferir = preferir if preferir in ("auto", "ytmusic", "youtube") else "auto"
         self.buscador = Buscador()
+        self._cancelado = False
+
+    def cancelar(self):
+        self._cancelado = True
 
     def descargar(self, cancion: dict, callback: Optional[Callable[[str], None]] = None) -> str:
-        titulo = cancion.get("titulo", "").strip()
-        artista = cancion.get("artista", "").strip()
-        album = cancion.get("album", "").strip()
+        if self._cancelado:
+            raise InterruptedError("Descarga cancelada")
+        titulo = (cancion.get("titulo") or "").strip()
+        artista = (cancion.get("artista") or "").strip()
+        album = (cancion.get("album") or "").strip()
 
         if not titulo:
             raise ValueError("Título vacío")
 
-        base = sanitize_filename(f"{artista} - {titulo}" if artista else titulo)
+        nombre_base = f"{artista} - {titulo}" if artista else titulo
+        base = sanitize_filename(nombre_base)
         destino_mp3 = self.carpeta / f"{base}.mp3"
 
         if destino_mp3.exists():
             if callback:
                 callback("omitida")
             return "omitida"
+
+        if self._cancelado:
+            raise InterruptedError("Descarga cancelada")
 
         url = self.buscador.obtener_url(artista, titulo, self.preferir)
         if not url:
@@ -48,6 +60,7 @@ class Descargador:
             "noplaylist": True,
             "quiet": True,
             "no_warnings": True,
+            "ignoreerrors": False,
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
