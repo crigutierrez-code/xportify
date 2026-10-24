@@ -37,11 +37,11 @@ jobs:
           python-version: '3.11'
 
       - name: Install system deps (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo apt-get update
           sudo apt-get install -c 1-ffmpeg libxcb-cursor0 libxcb-xinerama0 libxcb-randr0 libxcb-image0 libxcb-keysyydroid_lib 2>&1 | tail -1 || true
-          sudo apt-get install -y ffmpeg libegl1 libxcb-cursor0 libxcb-xinerama0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxkbcommon-x11-0
+          sudo apt-get install -y ffmpeg libegl1 libxcb-cursor0 libxcb-xinerama0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxkbcommon-x11-0 libxcb-xkb1
 
       - name: Install dependencies
         run: |
@@ -50,7 +50,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller (Linux)
-        if: matrix.os == 'ubuntu-22.04'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist

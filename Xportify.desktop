@@ -3,9 +3,9 @@ Version=1.0
 Type=Application
 Name=Xportify
 GenericName=Music Downloader
-Comment=Descarga tus playlists de Spotify, YouTube Music y más en MP3
-Exec=/home/cristian/Projects/xportify/xportify-launcher.sh
-Icon=/home/cristian/Projects/xportify/assets/xportify.png
+Comment=Convierte tus listas de Spotify, YouTube Music y más a MP3
+Exec=bash -c 'DIR="$(dirname "$(readlink -f "%k")")"; cd "$DIR"; ./Xportify'
+Icon=xportify.png
 Terminal=false
 Categories=AudioVideo;Audio;Utility;
 StartupNotify=true

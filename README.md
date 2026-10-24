@@ -8,6 +8,16 @@
 [![Licencia MIT](https://img.shields.io/badge/Licencia-MIT-34d399?style=for-the-badge)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-9b9b9b?style=for-the-badge)](https://www.python.org/)
 
+## Descargar
+
+| Sistema | Archivo | Notas |
+| --- | --- | --- |
+| **[Windows](https://github.com/crigutierrez-code/xportify/releases/latest)** | `Xportify-Windows-x64.zip` | Extrae y ejecuta `Xportify.exe` |
+| **[Linux](https://github.com/crigutierrez-code/xportify/releases/latest)** | `Xportify-Linux-x86_64.tar.gz` | Extrae, ejecuta `./Xportify` o usa `Xportify.desktop` |
+| **[macOS](https://github.com/crigutierrez-code/xportify/releases/latest)** | `Xportify-macOS.zip` | Extrae y abre `Xportify.app`. Si macOS lo bloquea: Ajustes → Privacidad y Seguridad → Abrir igualmente |
+
+> Todas las versiones, changelog y sumas `SHA256` están en [**Releases**](https://github.com/crigutierrez-code/xportify/releases).
+
 ![Archivo / Texto](docs/archivo_v2.png)
 ![URL](docs/url_v2.png)
 
