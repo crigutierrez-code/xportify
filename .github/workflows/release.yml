@@ -15,15 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-20.04
             name: linux
-            ext: tar.gz
           - os: windows-latest
             name: windows
-            ext: zip
           - os: macos-latest
             name: macos
-            ext: zip
 
     runs-on: ${{ matrix.os }}
 
@@ -40,7 +37,6 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -c 1-ffmpeg libxcb-cursor0 libxcb-xinerama0 libxcb-randr0 libxcb-image0 libxcb-keysyydroid_lib 2>&1 | tail -1 || true
           sudo apt-get install -y ffmpeg libegl1 libxcb-cursor0 libxcb-xinerama0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxkbcommon-x11-0 libxcb-xkb1
 
       - name: Install dependencies
@@ -54,10 +50,13 @@ jobs:
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
+          cp ../Xportify.desktop Xportify/ 2>/dev/null || true
+          cp ../xportify Xportify/ 2>/dev/null || true
+          cp ../assets/xportify.png Xportify/ 2>/dev/null || true
+          cp ../README.md Xportify/ 2>/dev/null || true
           tar czf Xportify-Linux-x86_64.tar.gz Xportify
-          mv Xportify-Linux-x86_64.tar.gz ../
+          sha256sum Xportify-Linux-x86_64.tar.gz > ../SHA256SUMS-linux.txt
           cd ..
-          sha256sum Xportify-Linux-x86_64.tar.gz > SHA256SUMS-linux.txt
 
       - name: Build with PyInstaller (Windows)
         if: matrix.os == 'windows-latest'
@@ -65,19 +64,17 @@ jobs:
           pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.ico --add-data "assets;assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
           7z a -tzip Xportify-Windows-x64.zip Xportify
-          mv Xportify-Windows-x64.zip ../
+          certutil -hashfile Xportify-Windows-x64.zip SHA256 | findstr /v "CertUtil" > ../SHA256SUMS-windows.txt
           cd ..
-          certutil -hashfile Xportify-Windows-x64.zip SHA256 | findstr /v "CertUtil" > SHA256SUMS-windows.txt
 
       - name: Build with PyInstaller (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.icns --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
-          ditto -c -k --keepParent Xportify.app Xportify-macOS.zip || zip -r Xportify-macOS.zip Xportify.app
-          mv Xportify-macOS.zip ../
+          ditto -c -k --keepParent Xportify.app Xportify-macOS.zip 2>/dev/null || zip -r Xportify-macOS.zip Xportify.app
+          shasum -a 256 Xportify-macOS.zip > ../SHA256SUMS-macos.txt
           cd ..
-          shasum -a 256 Xportify-macOS.zip > SHA256SUMS-macos.txt
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -88,13 +85,26 @@ jobs:
             Xportify-*.zip
             SHA256SUMS-*.txt
 
-      - name: Release
+      - name: Release (Linux)
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-20.04'
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            Xportify-*.tar.gz
-            Xportify-*.zip
-            SHA256SUMS-*.txt
-          draft: false
-          prerelease: false
+            Xportify-Linux-x86_64.tar.gz
+            SHA256SUMS-linux.txt
+
+      - name: Release (Windows)
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'windows-latest'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Xportify-Windows-x64.zip
+            SHA256SUMS-windows.txt
+
+      - name: Release (macOS)
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'macos-latest'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Xportify-macOS.zip
+            SHA256SUMS-macos.txt

@@ -4,7 +4,7 @@ Type=Application
 Name=Xportify
 GenericName=Music Downloader
 Comment=Convierte tus listas de Spotify, YouTube Music y más a MP3
-Exec=bash -c 'DIR="$(dirname "$(readlink -f "%k")")"; cd "$DIR"; ./Xportify'
+Exec=bash -c 'DIR="$(dirname "$(readlink -f "%k")")"; if [ -x "$DIR/Xportify" ]; then cd "$DIR" && exec ./Xportify; elif [ -x "$DIR/xportify" ]; then cd "$DIR" && exec ./xportify; else for d in "$DIR" "$HOME/.local/bin" "$HOME/Applications"; do [ -x "$d/Xportify" ] && exec "$d/Xportify" && exit; done; exec Xportify; fi'
 Icon=xportify.png
 Terminal=false
 Categories=AudioVideo;Audio;Utility;
