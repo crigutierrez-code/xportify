@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import os
-import webbrowser
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal
@@ -28,7 +26,24 @@ from PySide6.QtWidgets import (
 
 from ..core.parser import leer_canciones_desde_archivo, parsear_texto_manual
 from ..core.downloader import Descargador
+from ..core.sources import canciones_desde_url
 from ..utils.ffmpeg import aviso_ffmpeg, ffmpeg_disponible
+from ..utils.icon import icono_app
+
+
+class WorkerURL(QThread):
+    ok = Signal(list)
+    fallo = Signal(str)
+
+    def __init__(self, url):
+        super().__init__()
+        self.url = url
+
+    def run(self):
+        try:
+            self.ok.emit(canciones_desde_url(self.url))
+        except Exception as e:
+            self.fallo.emit(str(e))
 
 
 class WorkerDescarga(QThread):
@@ -74,6 +89,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Xportify")
+        self.setWindowIcon(icono_app())
         self.setMinimumSize(980, 720)
         self.canciones = []
         self.worker = None
@@ -123,8 +139,12 @@ class MainWindow(QMainWindow):
         root.addWidget(self.tabs)
 
         self.tab_origen = QWidget()
-        self.tabs.addTab(self.tab_origen, "Origen")
+        self.tabs.addTab(self.tab_origen, "Archivo / Texto")
         self._build_tab_origen()
+
+        self.tab_url = QWidget()
+        self.tabs.addTab(self.tab_url, "URL")
+        self._build_tab_url()
 
         self.tab_lista = QWidget()
         self.tabs.addTab(self.tab_lista, "Lista")
@@ -191,6 +211,73 @@ class MainWindow(QMainWindow):
 
         layout.addStretch()
 
+    def _build_tab_url(self):
+        layout = QVBoxLayout(self.tab_url)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(16)
+
+        grupo = QGroupBox("Pega un enlace")
+        v = QVBoxLayout(grupo)
+        info = QLabel("Playlist o álbum de Spotify, playlist de YouTube / YouTube Music, SoundCloud o Bandcamp.")
+        info.setStyleSheet("color: #b9b9b9;")
+        v.addWidget(info)
+        h = QHBoxLayout()
+        self.url_edit = QLineEdit()
+        self.url_edit.setPlaceholderText("https://open.spotify.com/playlist/...")
+        self.url_edit.returnPressed.connect(self.cargar_desde_url)
+        self.burl = QPushButton("Cargar lista")
+        self.burl.setObjectName("primary")
+        self.burl.clicked.connect(self.cargar_desde_url)
+        h.addWidget(self.url_edit)
+        h.addWidget(self.burl)
+        v.addLayout(h)
+        layout.addWidget(grupo)
+
+        grupo_ayuda = QGroupBox("Notas")
+        v2 = QVBoxLayout(grupo_ayuda)
+        nota = QLabel(
+            "· Funciona con enlaces públicos (playlist, álbum o canción).\n"
+            "· Tu lista privada de 'Me gusta' no es accesible por URL: expórtala con Exportify "
+            "desde la pestaña anterior.\n"
+            "· YouTube Music suele dar mejores coincidencias que YouTube normal."
+        )
+        nota.setStyleSheet("color: #9b9b9b;")
+        nota.setWordWrap(True)
+        v2.addWidget(nota)
+        layout.addWidget(grupo_ayuda)
+
+        self.lbl_url = QLabel("")
+        self.lbl_url.setStyleSheet("color: #9b9b9b;")
+        layout.addWidget(self.lbl_url)
+        layout.addStretch()
+
+    def cargar_desde_url(self):
+        url = self.url_edit.text().strip()
+        if not url:
+            QMessageBox.warning(self, "Sin URL", "Pega un enlace primero.")
+            return
+        self.burl.setEnabled(False)
+        self.lbl_url.setText("Leyendo el enlace...")
+        self.statusBar().showMessage("Leyendo enlace...")
+        self.url_worker = WorkerURL(url)
+        self.url_worker.ok.connect(self._url_ok)
+        self.url_worker.fallo.connect(self._url_fallo)
+        self.url_worker.start()
+
+    def _url_ok(self, canciones):
+        self.burl.setEnabled(True)
+        self.canciones = canciones
+        self.lbl_url.setText(f"{len(canciones)} canciones encontradas")
+        self._actualizar_lista()
+        self.tabs.setCurrentIndex(2)
+        self.statusBar().showMessage(f"Cargadas {len(canciones)} canciones desde URL")
+
+    def _url_fallo(self, mensaje):
+        self.burl.setEnabled(True)
+        self.lbl_url.setText("No se pudo leer el enlace")
+        self.statusBar().showMessage("Error al leer el enlace")
+        QMessageBox.critical(self, "Error al leer URL", mensaje)
+
     def _build_tab_lista(self):
         layout = QVBoxLayout(self.tab_lista)
         layout.setContentsMargins(18, 18, 18, 18)
@@ -201,7 +288,7 @@ class MainWindow(QMainWindow):
         cab.addWidget(self.lbl_total)
         cab.addStretch()
         bir = QPushButton("Ir a Descarga")
-        bir.clicked.connect(lambda: self.tabs.setCurrentIndex(2))
+        bir.clicked.connect(lambda: self.tabs.setCurrentIndex(3))
         cab.addWidget(bir)
         layout.addLayout(cab)
 
@@ -303,7 +390,7 @@ class MainWindow(QMainWindow):
         try:
             self.canciones = leer_canciones_desde_archivo(ruta)
             self._actualizar_lista()
-            self.tabs.setCurrentIndex(1)
+            self.tabs.setCurrentIndex(2)
             self.statusBar().showMessage(f"Cargadas {len(self.canciones)} canciones")
         except Exception as e:
             QMessageBox.critical(self, "Error al cargar", str(e))
@@ -319,7 +406,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, "Vacío", "No se encontraron canciones válidas.")
                 return
             self._actualizar_lista()
-            self.tabs.setCurrentIndex(1)
+            self.tabs.setCurrentIndex(2)
             self.statusBar().showMessage(f"Cargadas {len(self.canciones)} canciones")
         except Exception as e:
             QMessageBox.critical(self, "Error al cargar", str(e))
@@ -350,7 +437,7 @@ class MainWindow(QMainWindow):
 
         self.bdescargar.setEnabled(False)
         self.bparar.setEnabled(True)
-        self.tabs.setCurrentIndex(2)
+        self.tabs.setCurrentIndex(3)
         self.progreso.setMaximum(len(self.canciones))
         self.progreso.setValue(0)
         self.lbl_prog.setText("Iniciando...")
