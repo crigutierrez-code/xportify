@@ -1,0 +1,25 @@
+name: Build Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+      - name: Quick syntax check
+        run: python -m py_compile $(find src -name "*.py")
+      - name: Test import
+        run: |
+          PYTHONPATH=src python -c "from xportify import main; print('imports ok')"
