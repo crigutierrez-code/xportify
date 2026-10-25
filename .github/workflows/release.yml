@@ -52,7 +52,9 @@ jobs:
           cd dist
           cp ../Xportify.desktop Xportify/ 2>/dev/null || true
           cp ../xportify Xportify/ 2>/dev/null || true
+          cp ../install-xportify.sh Xportify/ 2>/dev/null || true
           cp ../assets/xportify.png Xportify/ 2>/dev/null || true
+          cp ../assets/xportify-logo.png Xportify/ 2>/dev/null || true
           cp ../README.md Xportify/ 2>/dev/null || true
           tar czf Xportify-Linux-x86_64.tar.gz Xportify
           sha256sum Xportify-Linux-x86_64.tar.gz > ../SHA256SUMS-linux.txt
