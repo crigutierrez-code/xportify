@@ -45,7 +45,7 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with PyInstaller (Linux)
+      - name: Build (Linux)
         if: matrix.os == 'ubuntu-22.04'
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
@@ -54,48 +54,63 @@ jobs:
           cp ../xportify Xportify/ 2>/dev/null || true
           cp ../install-xportify.sh Xportify/ 2>/dev/null || true
           cp ../assets/xportify.png Xportify/ 2>/dev/null || true
-          cp ../assets/xportify-logo.png Xportify/ 2>/dev/null || true
           cp ../README.md Xportify/ 2>/dev/null || true
           tar czf Xportify-Linux-x86_64.tar.gz Xportify
-          sha256sum Xportify-Linux-x86_64.tar.gz > ../SHA256SUMS-linux.txt
+          sha256sum Xportify-Linux-x86_64.tar.gz > SHA256SUMS-linux.txt
           cd ..
 
-      - name: Build with PyInstaller (Windows)
+      - name: Build (Windows)
         if: matrix.os == 'windows-latest'
+        shell: bash
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.ico --add-data "assets;assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
           7z a -tzip Xportify-Windows-x64.zip Xportify
-          certutil -hashfile Xportify-Windows-x64.zip SHA256 | findstr /v "CertUtil" > ../SHA256SUMS-windows.txt
+          certutil -hashfile Xportify-Windows-x64.zip SHA256 | findstr /v "CertUtil" > SHA256SUMS-windows.txt
           cd ..
 
-      - name: Build with PyInstaller (macOS)
+      - name: Build (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.icns --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
-          ditto -c -k --keepParent Xportify.app Xportify-macOS.zip 2>/dev/null || zip -r Xportify-macOS.zip Xportify.app
-          shasum -a 256 Xportify-macOS.zip > ../SHA256SUMS-macos.txt
+          ditto -c -k --keepParent Xportify.app Xportify-macOS.zip
+          shasum -a 256 Xportify-macOS.zip > SHA256SUMS-macos.txt
           cd ..
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Xportify-${{ matrix.name }}
+          name: xportify-${{ matrix.name }}
           path: |
-            Xportify-*.tar.gz
-            Xportify-*.zip
-            SHA256SUMS-*.txt
-
-      - name: Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
             Xportify-Linux-x86_64.tar.gz
             Xportify-Windows-x64.zip
             Xportify-macOS.zip
-            SHA256SUMS-linux.txt
-            SHA256SUMS-windows.txt
-            SHA256SUMS-macos.txt
-          fail_on_unmatched_files: false
+            SHA256SUMS-*.txt
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-all
+          merge-multiple: true
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          find dist-all -type f \( -name 'Xportify-*.tar.gz' -o -name 'Xportify-*.zip' -o -name 'SHA256SUMS-*.txt' \) -exec cp {} release/ \;
+          ls -lh release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          draft: false
+          prerelease: false
