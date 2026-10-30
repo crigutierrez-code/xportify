@@ -55,17 +55,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         working-directory: ${{ github.workspace }}
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name Xportify \
-            --add-data "assets:assets" \
-            --paths src \
-            --collect-submodules xportify \
-            --collect-all PySide6 \
-            --collect-all pandas \
-            --collect-all openpyxl \
-            --collect-all ytmusicapi \
-            --collect-all yt_dlp \
-            --collect-all httpx \
-            main.py
+          pyinstaller --noconfirm --onedir --windowed --name Xportify --add-data "assets:assets" --paths src --collect-submodules xportify --collect-all PySide6 --collect-all pandas --collect-all openpyxl --collect-all ytmusicapi --collect-all yt_dlp --collect-all httpx main.py
           cd dist
           cp ../Xportify.desktop Xportify/ 2>/dev/null || true
           cp ../xportify Xportify/ 2>/dev/null || true
@@ -81,20 +71,10 @@ jobs:
         shell: pwsh
         working-directory: ${{ github.workspace }}
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.ico \
-            --add-data "assets;assets" \
-            --paths src \
-            --collect-submodules xportify \
-            --collect-all PySide6 \
-            --collect-all pandas \
-            --collect-all openpyxl \
-            --collect-all ytmusicapi \
-            --collect-all yt_dlp \
-            --collect-all httpx \
-            main.py
-          cd dist
+          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.ico --add-data "assets;assets" --paths src --collect-submodules xportify --collect-all PySide6 --collect-all pandas --collect-all openpyxl --collect-all ytmusicapi --collect-all yt_dlp --collect-all httpx main.py
+          Set-Location dist
           Compress-Archive -Path "Xportify" -DestinationPath "../${{ matrix.out }}" -Force
-          cd ..
+          Set-Location ..
           $h = (Get-FileHash -Algorithm SHA256 ${{ matrix.out }}).Hash.ToLower()
           "$h  ${{ matrix.out }}" | Out-File -Encoding ascii ${{ matrix.sha }}
 
@@ -102,17 +82,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         working-directory: ${{ github.workspace }}
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.icns \
-            --add-data "assets:assets" \
-            --paths src \
-            --collect-submodules xportify \
-            --collect-all PySide6 \
-            --collect-all pandas \
-            --collect-all openpyxl \
-            --collect-all ytmusicapi \
-            --collect-all yt_dlp \
-            --collect-all httpx \
-            main.py
+          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.icns --add-data "assets:assets" --paths src --collect-submodules xportify --collect-all PySide6 --collect-all pandas --collect-all openpyxl --collect-all ytmusicapi --collect-all yt_dlp --collect-all httpx main.py
           cd dist
           ditto -c -k --keepParent Xportify.app ../${{ matrix.out }}
           cd ..
@@ -143,7 +113,7 @@ jobs:
       - name: List
         run: |
           mkdir -p out
-          find artifacts -type f -exec cp {} out/ \\;
+          find artifacts -type f -exec cp {} out/ \;
           ls -lh out/
 
       - name: Publish
