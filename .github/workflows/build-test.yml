@@ -9,6 +9,8 @@ on:
 jobs:
   test-build:
     runs-on: ubuntu-22.04
+    env:
+      QT_QPA_PLATFORM: offscreen
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,12 +25,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Quick syntax check
-        run: |
-          python -m py_compile $(find src -name "*.py")
+      - name: Syntax check
+        run: python -m py_compile $(find src -name "*.py")
 
-      - name: Test imports
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: |
-          PYTHONPATH=src python -c "import xportify; print('ok', xportify.__version__)"
+      - name: Import check
+        run: PYTHONPATH=src python -c "import xportify; print('Xportify', xportify.__version__)"
