@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             name: linux
           - os: windows-latest
             name: windows
@@ -34,7 +34,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install system deps (Linux)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg libegl1 libxcb-cursor0 libxcb-xinerama0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxkbcommon-x11-0 libxcb-xkb1
@@ -46,7 +46,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller (Linux)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
@@ -87,26 +87,15 @@ jobs:
             Xportify-*.zip
             SHA256SUMS-*.txt
 
-      - name: Release (Linux)
-        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-20.04'
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             Xportify-Linux-x86_64.tar.gz
-            SHA256SUMS-linux.txt
-
-      - name: Release (Windows)
-        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'windows-latest'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
             Xportify-Windows-x64.zip
-            SHA256SUMS-windows.txt
-
-      - name: Release (macOS)
-        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'macos-latest'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
             Xportify-macOS.zip
+            SHA256SUMS-linux.txt
+            SHA256SUMS-windows.txt
             SHA256SUMS-macos.txt
+          fail_on_unmatched_files: false
