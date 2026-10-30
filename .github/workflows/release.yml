@@ -55,7 +55,17 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         working-directory: ${{ github.workspace }}
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name Xportify --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
+          pyinstaller --noconfirm --onedir --windowed --name Xportify \
+            --add-data "assets:assets" \
+            --paths src \
+            --collect-submodules xportify \
+            --collect-all PySide6 \
+            --collect-all pandas \
+            --collect-all openpyxl \
+            --collect-all ytmusicapi \
+            --collect-all yt_dlp \
+            --collect-all httpx \
+            main.py
           cd dist
           cp ../Xportify.desktop Xportify/ 2>/dev/null || true
           cp ../xportify Xportify/ 2>/dev/null || true
@@ -71,7 +81,17 @@ jobs:
         shell: pwsh
         working-directory: ${{ github.workspace }}
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.ico --add-data "assets;assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
+          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.ico \
+            --add-data "assets;assets" \
+            --paths src \
+            --collect-submodules xportify \
+            --collect-all PySide6 \
+            --collect-all pandas \
+            --collect-all openpyxl \
+            --collect-all ytmusicapi \
+            --collect-all yt_dlp \
+            --collect-all httpx \
+            main.py
           cd dist
           Compress-Archive -Path "Xportify" -DestinationPath "../${{ matrix.out }}" -Force
           cd ..
@@ -82,7 +102,17 @@ jobs:
         if: matrix.os == 'macos-latest'
         working-directory: ${{ github.workspace }}
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.icns --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
+          pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.icns \
+            --add-data "assets:assets" \
+            --paths src \
+            --collect-submodules xportify \
+            --collect-all PySide6 \
+            --collect-all pandas \
+            --collect-all openpyxl \
+            --collect-all ytmusicapi \
+            --collect-all yt_dlp \
+            --collect-all httpx \
+            main.py
           cd dist
           ditto -c -k --keepParent Xportify.app ../${{ matrix.out }}
           cd ..
@@ -113,7 +143,7 @@ jobs:
       - name: List
         run: |
           mkdir -p out
-          find artifacts -type f -exec cp {} out/ \;
+          find artifacts -type f -exec cp {} out/ \\;
           ls -lh out/
 
       - name: Publish
