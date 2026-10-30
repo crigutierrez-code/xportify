@@ -17,10 +17,16 @@ jobs:
         include:
           - os: ubuntu-22.04
             name: linux
+            artifact: Xportify-Linux-x86_64.tar.gz
+            sha: SHA256SUMS-linux.txt
           - os: windows-latest
             name: windows
+            artifact: Xportify-Windows-x64.zip
+            sha: SHA256SUMS-windows.txt
           - os: macos-latest
             name: macos
+            artifact: Xportify-macOS.zip
+            sha: SHA256SUMS-macos.txt
 
     runs-on: ${{ matrix.os }}
 
@@ -55,18 +61,19 @@ jobs:
           cp ../install-xportify.sh Xportify/ 2>/dev/null || true
           cp ../assets/xportify.png Xportify/ 2>/dev/null || true
           cp ../README.md Xportify/ 2>/dev/null || true
-          tar czf Xportify-Linux-x86_64.tar.gz Xportify
-          sha256sum Xportify-Linux-x86_64.tar.gz > SHA256SUMS-linux.txt
+          tar czf ${{ matrix.artifact }} Xportify
+          sha256sum ${{ matrix.artifact }} > ${{ matrix.sha }}
           cd ..
 
       - name: Build (Windows)
         if: matrix.os == 'windows-latest'
-        shell: bash
+        shell: pwsh
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.ico --add-data "assets;assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
-          7z a -tzip Xportify-Windows-x64.zip Xportify
-          certutil -hashfile Xportify-Windows-x64.zip SHA256 | findstr /v "CertUtil" > SHA256SUMS-windows.txt
+          Compress-Archive -Path Xportify -DestinationPath ${{ matrix.artifact }} -Force
+          $hash = (Get-FileHash -Algorithm SHA256 ${{ matrix.artifact }}).Hash.ToLower()
+          "$hash  ${{ matrix.artifact }}" | Out-File -Encoding ASCII ${{ matrix.sha }}
           cd ..
 
       - name: Build (macOS)
@@ -74,8 +81,8 @@ jobs:
         run: |
           pyinstaller --noconfirm --onedir --windowed --name Xportify --icon assets/icon.icns --add-data "assets:assets" --paths src --hidden-import yt_dlp --hidden-import ytmusicapi --hidden-import pandas --hidden-import openpyxl --hidden-import httpx --collect-all yt_dlp --collect-all ytmusicapi main.py
           cd dist
-          ditto -c -k --keepParent Xportify.app Xportify-macOS.zip
-          shasum -a 256 Xportify-macOS.zip > SHA256SUMS-macos.txt
+          ditto -c -k --keepParent Xportify.app ${{ matrix.artifact }}
+          shasum -a 256 ${{ matrix.artifact }} > ${{ matrix.sha }}
           cd ..
 
       - name: Upload artifacts
@@ -83,10 +90,8 @@ jobs:
         with:
           name: xportify-${{ matrix.name }}
           path: |
-            Xportify-Linux-x86_64.tar.gz
-            Xportify-Windows-x64.zip
-            Xportify-macOS.zip
-            SHA256SUMS-*.txt
+            ${{ matrix.artifact }}
+            ${{ matrix.sha }}
           if-no-files-found: error
 
   release:
@@ -99,16 +104,16 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist-all
+          path: artifacts
           merge-multiple: true
 
-      - name: Prepare release files
+      - name: Prepare
         run: |
           mkdir -p release
-          find dist-all -type f \( -name 'Xportify-*.tar.gz' -o -name 'Xportify-*.zip' -o -name 'SHA256SUMS-*.txt' \) -exec cp {} release/ \;
+          cp artifacts/* release/ 2>/dev/null || true
           ls -lh release/
 
-      - name: Create Release
+      - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: release/*
